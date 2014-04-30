@@ -5,6 +5,7 @@ import com.cloudant.sync.util.JSONUtils;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ import java.util.Map;
 
 public class MultipartAttachmentWriter extends InputStream {
 
-    MultipartAttachmentWriter(Datastore datastore, DocumentRevision revision, List<Attachment> attachments) {
+    MultipartAttachmentWriter(Datastore datastore, DocumentRevision revision, List<Attachment> attachments) throws IOException {
 
         Map<String, Object> map = revision.getBody().asMap();
         LinkedHashMap<String, Object> atts = new LinkedHashMap<String, Object>();
@@ -45,9 +46,9 @@ public class MultipartAttachmentWriter extends InputStream {
             HashMap<String, Object> att = new HashMap<String, Object>();
             atts.put(a.name, att);
             att.put("follows", true);
-            att.put("content_type", a.contentType);
-            att.put("length",a.length);
-            att.put("digest","md5-"+new String((new Base64().encode(a.md5))));
+            att.put("content_type", a.type);
+            att.put("length",a.size);
+//            att.put("digest","md5-"+new String((new Base64().encode(a.md5))));
         }
 
         DocumentBody newBody = DocumentBodyFactory.create(map);
@@ -76,7 +77,7 @@ public class MultipartAttachmentWriter extends InputStream {
             components.add(new ByteArrayInputStream(boundary));
             components.add(new ByteArrayInputStream(crlf));
             components.add(new ByteArrayInputStream(crlf));
-            components.add(a.data);
+            components.add(a.getInputStream());
         }
         components.add(new ByteArrayInputStream(crlf));
         components.add(new ByteArrayInputStream(trailingBoundary));

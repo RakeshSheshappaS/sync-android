@@ -53,20 +53,16 @@ public class MultipartAttachmentWriterTests {
             // TODO some asserts etc
             DocumentRevision doc = datastore.createDocument(bodyOne);
             ArrayList<Attachment> attachments = new ArrayList<Attachment>();
-
             for (int i=0; i<1000; i++) {
-                Attachment att0 = new Attachment();
-                att0.name = "attachment" + UUID.randomUUID();
-                att0.contentType = "image/jpeg";
+                String name = "attachment" + UUID.randomUUID();
                 StringBuilder s = new StringBuilder();
                 s.append("this is some data for ");
-                s.append(att0.name);
+                s.append(name);
                 for (int c=0;c<Math.random()*100;c++) {
                     s.append("+");
                 }
                 byte[] bytes = (s.toString()).getBytes();
-                att0.data = new ByteArrayInputStream(bytes);
-                att0.length = bytes.length;
+                Attachment att0 = new UnsavedStreamAttachment(new ByteArrayInputStream(bytes), name, "image/jpeg");
                 attachments.add(att0);
             }
 
