@@ -18,6 +18,7 @@ import com.cloudant.mazha.ChangesResult;
 import com.cloudant.mazha.DocumentRevs;
 import com.cloudant.mazha.Response;
 import com.cloudant.sync.datastore.DocumentRevision;
+import com.cloudant.sync.datastore.MultipartAttachmentWriter;
 
 import java.util.List;
 import java.util.Map;
@@ -50,5 +51,6 @@ interface CouchDB {
     public List<DocumentRevs> getRevisions(String documentId, String... revisionId);
     public void bulk(List<DocumentRevision> revisions);
     public void bulkSerializedDocs(List<String> serializedDocs);
+    public void putMultiparts(List<MultipartAttachmentWriter> multiparts);
     public Map<String, Set<String>> revsDiff(Map<String, Set<String>> revisions);
 }

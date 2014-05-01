@@ -34,57 +34,63 @@ import java.util.Map;
 
 public class MultipartAttachmentWriter extends InputStream {
 
-    MultipartAttachmentWriter(Datastore datastore, DocumentRevision revision, List<Attachment> attachments) throws IOException {
-
-        Map<String, Object> map = revision.getBody().asMap();
-        LinkedHashMap<String, Object> atts = new LinkedHashMap<String, Object>();
-        // add the attachments entry to the body
-        map.put("_attachments", atts);
-
-        // get the ordering right here
-        for (Attachment a : attachments) {
-            HashMap<String, Object> att = new HashMap<String, Object>();
-            atts.put(a.name, att);
-            att.put("follows", true);
-            att.put("content_type", a.type);
-            att.put("length",a.size);
-//            att.put("digest","md5-"+new String((new Base64().encode(a.md5))));
-        }
-
-        DocumentBody newBody = DocumentBodyFactory.create(map);
-        DocumentRevision newRevision = null;
-        try {
-            newRevision = ((BasicDatastore)datastore).updateDocument(revision.getId(), revision.getRevision(), newBody, false);
-        } catch (ConflictException ce) {
-            // TODO
-            System.out.println("conflict!");
-        }
-
-        byte[] bodyBytes = JSONUtils.serializeAsBytes(newRevision.asMap());
+    public MultipartAttachmentWriter() {
         // pick a boundary
-        String basicBoundary = this.makeBoundary();
+        this.basicBoundary = this.makeBoundary();
         this.boundary = ("--"+basicBoundary).getBytes();
         this.trailingBoundary = ("--"+basicBoundary+"--").getBytes();
         components = new ArrayList<InputStream>();
+        // some preamble
+
+        contentLength += boundary.length;
+        contentLength += 6;
+        contentLength += contentType.length;
+
         components.add(new ByteArrayInputStream(boundary));
         components.add(new ByteArrayInputStream(crlf));
         components.add(new ByteArrayInputStream(contentType));
         components.add(new ByteArrayInputStream(crlf));
         components.add(new ByteArrayInputStream(crlf));
+    }
+
+    public void setBody(DocumentRevision body) {
+
+
+        byte[] bodyBytes = JSONUtils.serializeAsBytes(body.asMap());
+
+        contentLength += bodyBytes.length;
+
         components.add(new ByteArrayInputStream(bodyBytes));
-        for (Attachment a : attachments) {
-            components.add(new ByteArrayInputStream(crlf));
-            components.add(new ByteArrayInputStream(boundary));
-            components.add(new ByteArrayInputStream(crlf));
-            components.add(new ByteArrayInputStream(crlf));
-            components.add(a.getInputStream());
-        }
+        this.id = body.getId();
+        this.revision = body.getRevision();
+    }
+
+    public void addAttachment(Attachment attachment) throws IOException {
+
+        contentLength += boundary.length;
+        contentLength += 6;
+        contentLength += attachment.getSize();
+
+        components.add(new ByteArrayInputStream(crlf));
+        components.add(new ByteArrayInputStream(boundary));
+        components.add(new ByteArrayInputStream(crlf));
+        components.add(new ByteArrayInputStream(crlf));
+        components.add(attachment.getInputStream());
+    }
+
+    public void close() {
+
+        contentLength += trailingBoundary.length;
+        contentLength += 4;
+
         components.add(new ByteArrayInputStream(crlf));
         components.add(new ByteArrayInputStream(trailingBoundary));
         components.add(new ByteArrayInputStream(crlf));
+//        components.add(new ByteArrayInputStream(crlf));
         currentComponentIdx = 0;
     }
 
+    private String basicBoundary;
     private byte boundary[];
     private byte trailingBoundary[];
     private byte crlf[] = "\r\n".getBytes();
@@ -95,11 +101,16 @@ public class MultipartAttachmentWriter extends InputStream {
 
     private MessageDigest md5;
 
+    private String id;
+    private String revision;
+
+    private long contentLength;
 
     public int read() throws java.io.IOException {
         byte[] buf = new byte[1];
         int amountRead = read(buf);
         // will be 0 or EOF
+        System.out.print((char)buf[0]);
         if (amountRead != 1) {
             return amountRead;
         }
@@ -123,7 +134,12 @@ public class MultipartAttachmentWriter extends InputStream {
             currentOffset += howMuch;
         } while (currentComponentIdx < components.size()-1 && howMuch > 0);
         // signal EOF if we don't have any more
-        return amountRead > 0 ? amountRead : -1;
+
+
+        int retnum =  amountRead > 0 ? amountRead : -1;
+        //System.out.println("read[] "+retnum);
+        return retnum;
+
     }
 
     private String makeBoundary() {
@@ -136,5 +152,25 @@ public class MultipartAttachmentWriter extends InputStream {
             s.append(c);
         }
         return s.toString();
+    }
+
+    public String getBoundary() {
+        return basicBoundary;
+    }
+
+    public long getContentLength() {
+        return contentLength;
+    }
+
+    public String getId() {
+        return id;
+    }
+    public String getRevision() {
+        return revision;
+    }
+
+    @Override
+    public String toString() {
+        return "Multipart/related with "+components.size()+" components";
     }
 }

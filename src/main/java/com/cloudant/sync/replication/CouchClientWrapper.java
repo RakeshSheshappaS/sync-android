@@ -24,6 +24,7 @@ import com.cloudant.mazha.OkOpenRevision;
 import com.cloudant.mazha.OpenRevision;
 import com.cloudant.mazha.Response;
 import com.cloudant.sync.datastore.DocumentRevision;
+import com.cloudant.sync.datastore.MultipartAttachmentWriter;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -220,6 +221,14 @@ class CouchClientWrapper implements CouchDB {
         if(responses != null && responses.size() > 0) {
             Log.e(LOG_TAG, "Unknown bulk api error: " + responses + ", for input: " + serializedDocs);
             throw new RuntimeException("Unknown bulk api error");
+        }
+    }
+
+    @Override
+    public void putMultiparts(List<MultipartAttachmentWriter> multiparts) {
+        Log.v(LOG_TAG, "putMultiparts(), parts: " + multiparts);
+        for (MultipartAttachmentWriter mpw : multiparts) {
+            couchClient.putMultipart(mpw);
         }
     }
 

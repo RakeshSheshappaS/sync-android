@@ -20,9 +20,12 @@ package com.cloudant.mazha;
 
 
 import com.cloudant.mazha.json.JSONHelper;
+import com.cloudant.sync.datastore.MultipartAttachmentWriter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
+import org.apache.http.entity.InputStreamEntity;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -532,6 +535,20 @@ public class CouchClient {
         } finally {
             closeQuietly(is);
         }
+    }
+
+    public Response putMultipart(MultipartAttachmentWriter mpw) {
+
+        Map<String, Object> options = new HashMap<String, Object>();
+        options.put("new_edits", "false");
+        URI uri = this.uriHelper.documentUri(this.defaultDb, mpw.getId(), options);
+        HashMap<String, String> headers = new HashMap<String, String>();
+        String contentType = "multipart/related;boundary="+mpw.getBoundary();
+        InputStream is = this.httpClient.putStream(uri, contentType, mpw, mpw.getContentLength());
+        return getJson().fromJson(new InputStreamReader(is), Response.class);
+
+
+        // TODO response
     }
 
     public static class MissingRevisions {

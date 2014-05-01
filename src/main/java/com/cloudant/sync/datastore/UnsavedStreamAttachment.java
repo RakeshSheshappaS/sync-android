@@ -36,6 +36,10 @@ public class UnsavedStreamAttachment extends Attachment {
         return stream;
     }
 
+    public long getSize() {
+        return -1;
+    }
+
     private InputStream stream;
 
 }

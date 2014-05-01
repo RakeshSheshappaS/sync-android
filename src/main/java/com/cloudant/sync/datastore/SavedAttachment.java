@@ -41,6 +41,14 @@ public class SavedAttachment extends Attachment {
         return new FileInputStream(file);
     }
 
+    public boolean isLarge() {
+        return true;
+    }
+
+    public long getSize() {
+        return file.length();
+    }
+
     protected final long revpos;
     protected final long seq;
     protected final byte[] key;  // sha of file, used for file path on disk.
