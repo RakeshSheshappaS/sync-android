@@ -799,24 +799,18 @@ class BasicDatastore implements Datastore, DatastoreExtended {
                 documentCreated = new DocumentCreated(rev);
             }
             // now deal with any attachments
-            if (attachments != null) {
-                for (String att : attachments.keySet()) {
-                    String data = (String)((Map<String,Object>)attachments.get(att)).get("data");
-                    InputStream is = new Base64InputStream(new ByteArrayInputStream(data.getBytes()));
-                    String type = (String)((Map<String,Object>)attachments.get(att)).get("content_type");
-                    // inline attachments are automatically decompressed, so we don't have to worry about that
-                    UnsavedStreamAttachment ufa = new UnsavedStreamAttachment(is, att, type);
-                    boolean result = false;
-                    try {
-                        PreparedAttachment preparedAttachment = new PreparedAttachment(ufa, this.attachmentManager.attachmentsDir);
-                        result = this.attachmentManager.addAttachment(preparedAttachment, rev);
-                    } catch (IOException e) {
-                        Log.e(LOG_TAG, "IOException when preparing attachment "+ufa+": "+e);
-                    }
-                    if (!result) {
-                        Log.e(LOG_TAG, "There was a problem adding the attachment "+ufa+" to the datastore; not force inserting this document: "+rev);
-                        ok = false;
-                        break;
+            if (Boolean.parseBoolean(System.getProperty("pull_attachments_inline", "false"))) {
+                if (attachments != null) {
+                    for (String att : attachments.keySet()) {
+                        String data = (String) ((Map<String, Object>) attachments.get(att)).get("data");
+                        InputStream is = new Base64InputStream(new ByteArrayInputStream(data.getBytes()));
+                        String type = (String) ((Map<String, Object>) attachments.get(att)).get("content_type");
+                        // inline attachments are automatically decompressed, so we don't have to worry about that
+                        UnsavedStreamAttachment ufa = new UnsavedStreamAttachment(is, att, type);
+                        ok = safeAddAttachment(ufa, rev);
+                        if (!ok) {
+                            break;
+                        }
                     }
                 }
             }
@@ -833,6 +827,20 @@ class BasicDatastore implements Datastore, DatastoreExtended {
                 }
             }
         }
+    }
+
+    public boolean safeAddAttachment(Attachment ufa, DocumentRevision rev) {
+        boolean result = false;
+        try {
+            PreparedAttachment preparedAttachment = new PreparedAttachment(ufa, this.attachmentManager.attachmentsDir);
+            result = this.attachmentManager.addAttachment(preparedAttachment, rev);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "IOException when preparing attachment "+ufa+": "+e);
+        }
+        if (!result) {
+            Log.e(LOG_TAG, "There was a problem adding the attachment "+ufa+" to the datastore; not force inserting this document: "+rev);
+        }
+        return result;
     }
 
     @Override

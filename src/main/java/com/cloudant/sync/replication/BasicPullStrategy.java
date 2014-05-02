@@ -17,8 +17,13 @@ package com.cloudant.sync.replication;
 import com.cloudant.common.Log;
 import com.cloudant.mazha.ChangesResult;
 import com.cloudant.mazha.CouchConfig;
+import com.cloudant.mazha.DocumentRevs;
+import com.cloudant.sync.datastore.Attachment;
 import com.cloudant.sync.datastore.DatastoreExtended;
+import com.cloudant.sync.datastore.DocumentRevision;
 import com.cloudant.sync.datastore.DocumentRevsList;
+import com.cloudant.sync.datastore.DocumentRevsUtils;
+import com.cloudant.sync.datastore.UnsavedStreamAttachment;
 import com.cloudant.sync.util.JSONUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -272,6 +277,19 @@ class BasicPullStrategy implements ReplicationStrategy {
                     if (this.cancel) { break; }
 
                     this.targetDb.bulkInsert(result);
+
+                    // now put together a list of attachments we need to download
+                    if (!Boolean.parseBoolean(System.getProperty("pull_attachments_inline", "false"))) {
+                        for (DocumentRevs documentRevs : result) {
+                            Map<String, Object> attachments = documentRevs.getAttachments();
+                            for (String a : attachments.keySet()) {
+                                String contentType = ((Map<String, String>) attachments.get(a)).get("content_type");
+                                UnsavedStreamAttachment usa = this.sourceDb.getAttachmentStream(documentRevs.getId(), documentRevs.getRev(), a, contentType);
+                                DocumentRevision doc = this.targetDb.getDbCore().getDocument(documentRevs.getId());
+                                this.targetDb.safeAddAttachment(usa, doc);
+                            }
+                        }
+                    }
                     changesProcessed++;
                 }
             } catch (InterruptedException ex) {

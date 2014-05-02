@@ -19,6 +19,7 @@ import com.cloudant.mazha.DocumentRevs;
 import com.cloudant.mazha.Response;
 import com.cloudant.sync.datastore.DocumentRevision;
 import com.cloudant.sync.datastore.MultipartAttachmentWriter;
+import com.cloudant.sync.datastore.UnsavedStreamAttachment;
 
 import java.util.List;
 import java.util.Map;
@@ -53,4 +54,5 @@ interface CouchDB {
     public void bulkSerializedDocs(List<String> serializedDocs);
     public void putMultiparts(List<MultipartAttachmentWriter> multiparts);
     public Map<String, Set<String>> revsDiff(Map<String, Set<String>> revisions);
+    public UnsavedStreamAttachment getAttachmentStream(String id, String rev, String attachmentName, String contentType);
 }

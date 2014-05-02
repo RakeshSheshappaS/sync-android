@@ -284,7 +284,12 @@ public class CouchClient {
 
         Map<String, Object> options = new HashMap<String, Object>();
         options.put("revs", true);
-        options.put("attachments", true);
+        // only pull attachments inline if we're configured to
+        if (Boolean.parseBoolean(System.getProperty("pull_attachments_inline", "false"))) {
+            options.put("attachments", true);
+        } else {
+            options.put("attachments", false);
+        }
         options.put("open_revs", getJson().toJson(revisions));
         return this.getDocument(id, options, new TypeReference<List<OpenRevision>>() {
         });
