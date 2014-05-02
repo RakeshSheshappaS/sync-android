@@ -1,5 +1,5 @@
 language: java
-script: "gradle check integrationTest"
+script: "gradle -i check integrationTest"
 
 jdk:
   - openjdk6
