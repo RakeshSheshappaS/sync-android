@@ -86,7 +86,6 @@ public class MultipartAttachmentWriter extends InputStream {
         components.add(new ByteArrayInputStream(crlf));
         components.add(new ByteArrayInputStream(trailingBoundary));
         components.add(new ByteArrayInputStream(crlf));
-//        components.add(new ByteArrayInputStream(crlf));
         currentComponentIdx = 0;
     }
 
@@ -110,7 +109,6 @@ public class MultipartAttachmentWriter extends InputStream {
         byte[] buf = new byte[1];
         int amountRead = read(buf);
         // will be 0 or EOF
-        System.out.print((char)buf[0]);
         if (amountRead != 1) {
             return amountRead;
         }
@@ -133,11 +131,9 @@ public class MultipartAttachmentWriter extends InputStream {
             amountRead += currentComponent.read(bytes, currentOffset, howMuch);
             currentOffset += howMuch;
         } while (currentComponentIdx < components.size()-1 && howMuch > 0);
+
         // signal EOF if we don't have any more
-
-
         int retnum =  amountRead > 0 ? amountRead : -1;
-        //System.out.println("read[] "+retnum);
         return retnum;
 
     }

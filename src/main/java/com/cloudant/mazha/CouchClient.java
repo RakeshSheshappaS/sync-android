@@ -538,17 +538,13 @@ public class CouchClient {
     }
 
     public Response putMultipart(MultipartAttachmentWriter mpw) {
-
         Map<String, Object> options = new HashMap<String, Object>();
         options.put("new_edits", "false");
         URI uri = this.uriHelper.documentUri(this.defaultDb, mpw.getId(), options);
         HashMap<String, String> headers = new HashMap<String, String>();
-        String contentType = "multipart/related;boundary="+mpw.getBoundary();
+        String contentType = "multipart/related;boundary=" + mpw.getBoundary();
         InputStream is = this.httpClient.putStream(uri, contentType, mpw, mpw.getContentLength());
         return getJson().fromJson(new InputStreamReader(is), Response.class);
-
-
-        // TODO response
     }
 
     public static class MissingRevisions {
