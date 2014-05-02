@@ -2,6 +2,8 @@ package com.cloudant.sync.datastore;
 
 import com.cloudant.sync.util.TestUtils;
 
+import junit.framework.Assert;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,14 +77,19 @@ public class MultipartAttachmentWriterTests {
 
             int chunkSize = 3;
             int amountRead = 0;
+            int totalRead = 0;
 
             do {
                 byte buf[] = new byte[chunkSize];
                 amountRead = mpw.read(buf);
                 if (amountRead > 0) {
+                    totalRead += amountRead;
                     System.out.print(new String(buf, 0, amountRead));
                 }
             } while(amountRead > 0);
+
+            Assert.assertEquals(totalRead, mpw.getContentLength());
+
         } catch (Exception e) {
             System.out.println("aarg "+e);
         }

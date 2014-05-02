@@ -81,11 +81,10 @@ public class MultipartAttachmentWriter extends InputStream {
     public void close() {
 
         contentLength += trailingBoundary.length;
-        contentLength += 4;
+        contentLength += 2;
 
         components.add(new ByteArrayInputStream(crlf));
         components.add(new ByteArrayInputStream(trailingBoundary));
-        components.add(new ByteArrayInputStream(crlf));
         currentComponentIdx = 0;
     }
 
