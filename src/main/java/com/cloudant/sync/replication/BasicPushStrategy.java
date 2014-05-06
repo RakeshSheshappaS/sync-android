@@ -304,9 +304,6 @@ class BasicPushStrategy implements ReplicationStrategy {
             }
         }
 
-        System.out.println("*** Multiparts: "+itemsToPush.multiparts);
-        System.out.println("*** Serial: "+itemsToPush.serializedDocs);
-
         return itemsToPush;
     }
 

@@ -14,6 +14,7 @@
 
 package com.cloudant.sync.replication;
 
+import com.cloudant.common.RequireRunningCouchDB;
 import com.cloudant.mazha.Response;
 import com.cloudant.sync.datastore.Attachment;
 import com.cloudant.sync.datastore.DocumentRevision;
@@ -24,6 +25,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -33,6 +35,8 @@ import java.io.IOException;
 /**
  * Created by tomblench on 26/03/2014.
  */
+
+@Category(RequireRunningCouchDB.class)
 public class AttachmentsPullTest extends ReplicationTestBase {
 
     String id;

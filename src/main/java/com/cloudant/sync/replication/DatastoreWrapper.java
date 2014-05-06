@@ -104,8 +104,8 @@ class DatastoreWrapper {
         return allDocumentTrees;
     }
 
-    public boolean safeAddAttachment(Attachment ufa, DocumentRevision rev) {
-        return this.dbCore.safeAddAttachment(ufa, rev);
+    public boolean safeAddAttachment(Attachment ufa, DocumentRevision rev, String encoding) {
+        return this.dbCore.safeAddAttachment(ufa, rev, encoding);
     }
 
 }

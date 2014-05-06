@@ -250,6 +250,14 @@ public interface DatastoreExtended extends Datastore {
      */
     public boolean safeAddAttachment(Attachment ufa, DocumentRevision rev);
 
+    /**
+     * TODO
+     * @param ufa
+     * @param rev
+     * @param encoding
+     * @return
+     */
+    public boolean safeAddAttachment(Attachment ufa, DocumentRevision rev, String encoding);
 
 
 }

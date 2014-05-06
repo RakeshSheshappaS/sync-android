@@ -284,9 +284,10 @@ class BasicPullStrategy implements ReplicationStrategy {
                             Map<String, Object> attachments = documentRevs.getAttachments();
                             for (String a : attachments.keySet()) {
                                 String contentType = ((Map<String, String>) attachments.get(a)).get("content_type");
+                                String encoding = (String) ((Map<String, Object>) attachments.get(a)).get("encoding");
                                 UnsavedStreamAttachment usa = this.sourceDb.getAttachmentStream(documentRevs.getId(), documentRevs.getRev(), a, contentType);
                                 DocumentRevision doc = this.targetDb.getDbCore().getDocument(documentRevs.getId());
-                                this.targetDb.safeAddAttachment(usa, doc);
+                                this.targetDb.safeAddAttachment(usa, doc, encoding);
                             }
                         }
                     }

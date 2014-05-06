@@ -807,7 +807,7 @@ class BasicDatastore implements Datastore, DatastoreExtended {
                         String type = (String) ((Map<String, Object>) attachments.get(att)).get("content_type");
                         // inline attachments are automatically decompressed, so we don't have to worry about that
                         UnsavedStreamAttachment ufa = new UnsavedStreamAttachment(is, att, type);
-                        ok = safeAddAttachment(ufa, rev);
+                        ok = safeAddAttachment(ufa, rev, AttachmentManager.Encoding.Plain);
                         if (!ok) {
                             break;
                         }
@@ -829,10 +829,20 @@ class BasicDatastore implements Datastore, DatastoreExtended {
         }
     }
 
+
     public boolean safeAddAttachment(Attachment ufa, DocumentRevision rev) {
+        return safeAddAttachment(ufa, rev, AttachmentManager.Encoding.Plain);
+    }
+
+    public boolean safeAddAttachment(Attachment ufa, DocumentRevision rev, String encodingStr) {
+        AttachmentManager.Encoding encoding = encodingStr != null && encodingStr.equals("gzip") ? AttachmentManager.Encoding.Gzip : AttachmentManager.Encoding.Plain;
+        return safeAddAttachment(ufa, rev, encoding);
+    }
+
+    private boolean safeAddAttachment(Attachment ufa, DocumentRevision rev, AttachmentManager.Encoding encoding) {
         boolean result = false;
         try {
-            PreparedAttachment preparedAttachment = new PreparedAttachment(ufa, this.attachmentManager.attachmentsDir);
+            PreparedAttachment preparedAttachment = new PreparedAttachment(ufa, this.attachmentManager.attachmentsDir, encoding);
             result = this.attachmentManager.addAttachment(preparedAttachment, rev);
         } catch (IOException e) {
             Log.e(LOG_TAG, "IOException when preparing attachment "+ufa+": "+e);

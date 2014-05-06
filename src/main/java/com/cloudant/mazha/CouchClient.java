@@ -221,10 +221,25 @@ public class CouchClient {
     public InputStream getAttachmentStream(String id, String attachmentName) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "id must not be empty");
         URI doc = this.uriHelper.attachmentUri(this.defaultDb, id, attachmentName);
+        return httpClient.getCompressed(doc);
+    }
+
+    public InputStream getAttachmentStreamUncompressed(String id, String attachmentName) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "id must not be empty");
+        URI doc = this.uriHelper.attachmentUri(this.defaultDb, id, attachmentName);
         return httpClient.get(doc);
     }
 
     public InputStream getAttachmentStream(String id, String rev, String attachmentName) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "id must not be empty");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(rev), "rev must not be empty");
+        Map<String, Object> queries = new HashMap<String, Object>();
+        queries.put("rev", rev);
+        URI doc = this.uriHelper.attachmentUri(this.defaultDb, id, queries, attachmentName);
+        return httpClient.getCompressed(doc);
+    }
+
+    public InputStream getAttachmentStreamUncompressed(String id, String rev, String attachmentName) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "id must not be empty");
         Preconditions.checkArgument(!Strings.isNullOrEmpty(rev), "rev must not be empty");
         Map<String, Object> queries = new HashMap<String, Object>();
@@ -289,6 +304,7 @@ public class CouchClient {
             options.put("attachments", true);
         } else {
             options.put("attachments", false);
+            options.put("att_encoding_info", true);
         }
         options.put("open_revs", getJson().toJson(revisions));
         return this.getDocument(id, options, new TypeReference<List<OpenRevision>>() {

@@ -80,6 +80,12 @@ public class HttpRequests {
         return get(get);
     }
 
+    InputStream getCompressed(URI uri) {
+        HttpGet get = new HttpGet(uri);
+        get.addHeader("Accept-Encoding", "gzip");
+        return get(get);
+    }
+
     InputStream get(HttpGet httpGet) {
         HttpResponse response = executeRequest(httpGet);
         return getStream(response);

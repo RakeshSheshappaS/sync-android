@@ -130,7 +130,7 @@ public class AttachmentsPushTest extends ReplicationTestBase {
         push();
 
         // check it's in the DB
-        InputStream is1 = this.couchClient.getAttachmentStream(id1, attachmentName);
+        InputStream is1 = this.couchClient.getAttachmentStreamUncompressed(id1, attachmentName);
         InputStream is2 = new FileInputStream(f);
         Assert.assertTrue("Attachment not the same", TestUtils.streamsEqual(is1, is2));
     }
@@ -179,10 +179,10 @@ public class AttachmentsPushTest extends ReplicationTestBase {
         InputStream isOriginal1;
         InputStream isOriginal2;
 
-        InputStream isRev2 = this.couchClient.getAttachmentStream(id1, rev2.getRevision(), attachmentName1);
-        InputStream isRev3 = this.couchClient.getAttachmentStream(id1, rev3.getRevision(), attachmentName1);
-        InputStream isRev4Att1 = this.couchClient.getAttachmentStream(id1, rev4.getRevision(), attachmentName1);
-        InputStream isRev4Att2 = this.couchClient.getAttachmentStream(id1, rev4.getRevision(), attachmentName2);
+        InputStream isRev2 = this.couchClient.getAttachmentStreamUncompressed(id1, rev2.getRevision(), attachmentName1);
+        InputStream isRev3 = this.couchClient.getAttachmentStreamUncompressed(id1, rev3.getRevision(), attachmentName1);
+        InputStream isRev4Att1 = this.couchClient.getAttachmentStreamUncompressed(id1, rev4.getRevision(), attachmentName1);
+        InputStream isRev4Att2 = this.couchClient.getAttachmentStreamUncompressed(id1, rev4.getRevision(), attachmentName2);
 
         isOriginal1 = new FileInputStream(f1);
         Assert.assertTrue("Attachment not the same", TestUtils.streamsEqual(isRev2, isOriginal1));
