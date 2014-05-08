@@ -32,6 +32,7 @@ import com.google.common.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -283,6 +284,10 @@ class BasicPullStrategy implements ReplicationStrategy {
                         for (DocumentRevs documentRevs : result) {
                             Map<String, Object> attachments = documentRevs.getAttachments();
                             for (String a : attachments.keySet()) {
+                                Boolean stub = ((Map<String, Boolean>) attachments.get(a)).get("stub");
+                                if (stub != null && stub.booleanValue()) {
+                                    continue;
+                                }
                                 String contentType = ((Map<String, String>) attachments.get(a)).get("content_type");
                                 String encoding = (String) ((Map<String, Object>) attachments.get(a)).get("encoding");
                                 UnsavedStreamAttachment usa = this.sourceDb.getAttachmentStream(documentRevs.getId(), documentRevs.getRev(), a, contentType);
@@ -332,10 +337,22 @@ class BasicPullStrategy implements ReplicationStrategy {
 
     public List<Callable<DocumentRevsList>> createTasks(List<String> ids,
                                                         Map<String, Collection<String>> revisions) {
+
+
         List<Callable<DocumentRevsList>> tasks = new ArrayList<Callable<DocumentRevsList>>();
         for(String id : ids) {
+            // get list for atts_since (these are possible ancestors we have, it's ok to be eager
+            // and get all revision IDs higher up in the tree even if they're not our ancestors and
+            // belong to a different subtree)
+            HashSet<String> possibleAncestors = new HashSet<String>();
+            for (String revId : revisions.get(id)) {
+                List<String> thesePossibleAncestors = targetDb.getDbCore().getPossibleAncestorRevisionIDs(id, revId, 50);
+                if (thesePossibleAncestors != null) {
+                    possibleAncestors.addAll(thesePossibleAncestors);
+                }
+            }
             tasks.add(GetRevisionTask.createGetRevisionTask(this.sourceDb,
-                    id, revisions.get(id).toArray(new String[]{})));
+                    id, revisions.get(id), possibleAncestors));
         }
         return tasks;
     }

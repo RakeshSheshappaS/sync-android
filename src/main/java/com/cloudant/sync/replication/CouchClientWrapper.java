@@ -32,6 +32,7 @@ import com.google.common.base.Strings;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -133,9 +134,9 @@ class CouchClientWrapper implements CouchDB {
      * @see DocumentRevs
      */
     @Override
-    public List<DocumentRevs> getRevisions(String documentId, String... revisionIds) {
+    public List<DocumentRevs> getRevisions(String documentId, Collection<String> revisionIds, Collection<String> attsSince) {
         List<OpenRevision> openRevisions =
-                couchClient.getDocWithOpenRevisions(documentId, revisionIds);
+                couchClient.getDocWithOpenRevisions(documentId, revisionIds, attsSince);
 
         // expect all the open revisions return ok, return error is there is any missing
         List<DocumentRevs> documentRevs = new ArrayList<DocumentRevs>();

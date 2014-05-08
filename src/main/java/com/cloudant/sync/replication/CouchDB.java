@@ -21,6 +21,7 @@ import com.cloudant.sync.datastore.DocumentRevision;
 import com.cloudant.sync.datastore.MultipartAttachmentWriter;
 import com.cloudant.sync.datastore.UnsavedStreamAttachment;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +50,7 @@ interface CouchDB {
 
     public ChangesResult changes(String lastSequence, int limit);
     public ChangesResult changes(Replication.Filter filter,String lastSequence, int limit);
-    public List<DocumentRevs> getRevisions(String documentId, String... revisionId);
+    public List<DocumentRevs> getRevisions(String documentId, Collection<String> revisionIds, Collection<String> attsSince);
     public void bulk(List<DocumentRevision> revisions);
     public void bulkSerializedDocs(List<String> serializedDocs);
     public void putMultiparts(List<MultipartAttachmentWriter> multiparts);

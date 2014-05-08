@@ -32,6 +32,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -293,9 +294,9 @@ public class CouchClient {
      * It must return a list because that is how CouchDB return its results.
      *
      */
-    public List<OpenRevision> getDocWithOpenRevisions(String id, String... revisions) {
+    public List<OpenRevision> getDocWithOpenRevisions(String id, Collection<String> revisions, Collection<String> attsSince) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "id must not be empty");
-        Preconditions.checkArgument(revisions.length > 0, "Need at lease on open revision");
+        Preconditions.checkArgument(revisions.size() > 0, "Need at lease one open revision");
 
         Map<String, Object> options = new HashMap<String, Object>();
         options.put("revs", true);
@@ -305,6 +306,9 @@ public class CouchClient {
         } else {
             options.put("attachments", false);
             options.put("att_encoding_info", true);
+        }
+        if (attsSince != null) {
+            options.put("atts_since", getJson().toJson(attsSince));
         }
         options.put("open_revs", getJson().toJson(revisions));
         return this.getDocument(id, options, new TypeReference<List<OpenRevision>>() {
