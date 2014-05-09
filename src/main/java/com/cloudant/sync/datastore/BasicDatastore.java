@@ -382,11 +382,11 @@ class BasicDatastore implements Datastore, DatastoreExtended {
 
         String sql = "SELECT revid FROM revs, docs WHERE docs.docid=?"+
                 " and revs.deleted=0 and revs.json not null and revs.doc_id = docs.doc_id"+
-                " ORDER BY revs.sequence DESC LIMIT ?";
+                " ORDER BY revs.sequence DESC";
         ArrayList<String> ids = new ArrayList<String>();
         try {
-            Cursor c = this.sqlDb.rawQuery(sql, new String[]{docId, String.valueOf(limit)});
-            while (c.moveToNext()) {
+            Cursor c = this.sqlDb.rawQuery(sql, new String[]{docId});
+            while (c.moveToNext() && limit-- > 0) {
                 String ancestorRevId = c.getString(0);
                 int ancestorGeneration = CouchUtils.generationFromRevId(ancestorRevId);
                 if (ancestorGeneration < generation) {
@@ -829,7 +829,7 @@ class BasicDatastore implements Datastore, DatastoreExtended {
             long seq = 0;
             // sequence here is -1, but we need it to insert the attachment - also might be wanted by subscribers
             if (this.containsDocument(rev.getId())) {
-                seq = doForceInsertExistingDocumentWithHistory(rev, revisionHistory);
+                seq = doForceInsertExistingDocumentWithHistory(rev, revisionHistory, attachments);
                 rev.initialiseSequence(seq);
                 // TODO fetch the parent doc?
                 documentUpdated = new DocumentUpdated(null, rev);
@@ -844,6 +844,7 @@ class BasicDatastore implements Datastore, DatastoreExtended {
                     for (String att : attachments.keySet()) {
                         Boolean stub = ((Map<String, Boolean>) attachments.get(att)).get("stub");
                         if (stub != null && stub.booleanValue()) {
+                            // stubs get copied forward at the end of insertDocumentHistoryIntoExistingTree - nothing to do here
                             continue;
                         }
                         String data = (String) ((Map<String, Object>) attachments.get(att)).get("data");
@@ -925,7 +926,7 @@ class BasicDatastore implements Datastore, DatastoreExtended {
      * @param revisions   revision history to insert, it includes all revisions (include the revision of the DocumentRevision
      *                    as well) sorted in ascending order.
      */
-    private long doForceInsertExistingDocumentWithHistory(DocumentRevision newRevision, List<String> revisions) {
+    private long doForceInsertExistingDocumentWithHistory(DocumentRevision newRevision, List<String> revisions, Map<String, Object> attachments) {
         Log.v(LOG_TAG, "doForceInsertExistingDocumentWithHistory(): Revisions: " + revisions);
         Preconditions.checkNotNull(newRevision, "New document revision must not be null.");
         Preconditions.checkArgument(this.containsDocument(newRevision.getId()), "DocumentRevisionTree must exist.");
@@ -944,13 +945,14 @@ class BasicDatastore implements Datastore, DatastoreExtended {
         if(parent == null) {
             sequence = insertDocumentHistoryToNewTree(newRevision, revisions, docNumericID, localRevs);
         } else {
-            sequence = insertDocumentHistoryIntoExistingTree(newRevision, revisions, docNumericID, localRevs);
+            sequence = insertDocumentHistoryIntoExistingTree(newRevision, revisions, docNumericID, localRevs, attachments);
         }
         return sequence;
     }
 
     private long insertDocumentHistoryIntoExistingTree(DocumentRevision newRevision, List<String> revisions,
-                                                       Long docNumericID, DocumentRevisionTree localRevs) {
+                                                       Long docNumericID, DocumentRevisionTree localRevs,
+                                                       Map<String, Object> attachments) {
         DocumentRevision parent = localRevs.lookup(newRevision.getId(), revisions.get(0));
         Preconditions.checkNotNull(parent, "Parent must not be null");
         BasicDocumentRevision previousLeaf = (BasicDocumentRevision) localRevs.getCurrentRevision();
@@ -997,6 +999,25 @@ class BasicDatastore implements Datastore, DatastoreExtended {
         if (previousLeaf.isCurrent()) {
             // we have a conflicts, and we need to resolve it.
             pickWinnerOfConflicts(localRevs, newLeaf, previousLeaf);
+        }
+
+        // copy stubbed attachments forward from last real revision to this revision
+        if (attachments != null) {
+            for (String att : attachments.keySet()) {
+                Boolean stub = ((Map<String, Boolean>) attachments.get(att)).get("stub");
+                if (stub != null && stub.booleanValue()) {
+                    // TODO filename escaping
+                    String attsSql = "INSERT INTO attachments " +
+                            "(sequence, filename, key, type, length, revpos) " +
+                            "SELECT " + sequence + ", filename, key, type, length, revpos " +
+                            "FROM attachments WHERE sequence=" + previousLeaf.getSequence() + " AND filename = \""+att+"\"";
+                    try {
+                        this.getSQLDatabase().execSQL(attsSql);
+                    } catch (SQLException sqe) {
+                        Log.e(LOG_TAG, "Error copying stubbed attachments: "+sqe);
+                    }
+                }
+            }
         }
 
         return sequence;

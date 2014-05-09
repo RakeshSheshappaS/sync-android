@@ -167,10 +167,11 @@ public class AttachmentsPullTest extends ReplicationTestBase {
             DocumentRevision docRev1 = datastore.getDocument(id, rev);
             Attachment a1 = datastore.getAttachment(docRev1, bigTextAttachmentName);
             updateRevisionAndKeepAttachment();
+            updateRevisionAndKeepAttachment();
             pull();
             DocumentRevision docRev2 = datastore.getDocument(id, rev);
             Attachment a2 = datastore.getAttachment(docRev2, bigTextAttachmentName);
-            Assert.assertNull(a2);
+            Assert.assertNotNull(a2);
 
         } catch (Exception e) {
             Assert.fail("Create/pull error " + e);
