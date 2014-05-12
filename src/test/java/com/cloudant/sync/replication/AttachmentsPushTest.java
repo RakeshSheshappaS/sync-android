@@ -48,8 +48,6 @@ import static org.hamcrest.core.Is.isA;
  * Created by tomblench on 26/03/2014.
  */
 
-@Category(RequireRunningCouchDB.class)
-@RunWith(Parameterized.class)
 public class AttachmentsPushTest extends ReplicationTestBase {
 
     String id1;
@@ -58,20 +56,9 @@ public class AttachmentsPushTest extends ReplicationTestBase {
 
     private TypedDatastore<Foo> fooTypedDatastore;
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][]{
-                {false}, {true}
-        });
-    }
-
-    @Parameterized.Parameter
-    public boolean pullAttachmentsInline;
-
     @Before
     public void setUp() throws Exception {
 
-        System.setProperty("pull_attachments_inline", String.valueOf(pullAttachmentsInline));
         super.setUp();
 
         this.fooTypedDatastore = new TypedDatastore<Foo>(
@@ -132,6 +119,33 @@ public class AttachmentsPushTest extends ReplicationTestBase {
         populateSomeDataInLocalDatastore();
         File f = new File("fixture", attachmentName);
         Attachment att = new UnsavedFileAttachment(f, "text/plain");
+        List<Attachment> atts = new ArrayList<Attachment>();
+        atts.add(att);
+        DocumentRevision oldRevision = datastore.getDocument(id1);
+        DocumentRevision newRevision = null;
+        try {
+            // set attachment
+            newRevision = datastore.updateAttachments(oldRevision, atts);
+        } catch (IOException ioe) {
+            Assert.fail("IOException thrown: " + ioe);
+        }
+
+        // push replication
+        push();
+
+        // check it's in the DB
+        InputStream is1 = this.couchClient.getAttachmentStreamUncompressed(id1, attachmentName);
+        InputStream is2 = new FileInputStream(f);
+        Assert.assertTrue("Attachment not the same", TestUtils.streamsEqual(is1, is2));
+    }
+
+    @Test
+    public void pushBigAttachmentsTest() throws Exception {
+        // simple 1-rev attachment
+        String attachmentName = "bonsai-boston.jpg";
+        populateSomeDataInLocalDatastore();
+        File f = new File("fixture", attachmentName);
+        Attachment att = new UnsavedFileAttachment(f, "image/jpeg");
         List<Attachment> atts = new ArrayList<Attachment>();
         atts.add(att);
         DocumentRevision oldRevision = datastore.getDocument(id1);

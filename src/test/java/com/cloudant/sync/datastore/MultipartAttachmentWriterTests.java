@@ -95,4 +95,41 @@ public class MultipartAttachmentWriterTests {
         }
     }
 
+
+    @Test
+    public void Test2() {
+        try {
+            // TODO some asserts etc
+            DocumentRevision doc = datastore.createDocument(bodyOne);
+            ArrayList<Attachment> attachments = new ArrayList<Attachment>();
+
+            MultipartAttachmentWriter mpw = new MultipartAttachmentWriter();
+            mpw.setBody(doc);
+
+            Attachment att0 = new UnsavedFileAttachment(new File("fixture", "bonsai-boston.jpg"), "bonsai-boston.jpg");
+            mpw.addAttachment(att0);
+            mpw.close();
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+            int chunkSize = 3;
+            int amountRead = 0;
+            int totalRead = 0;
+
+            do {
+                byte buf[] = new byte[chunkSize];
+                amountRead = mpw.read(buf);
+                if (amountRead > 0) {
+                    totalRead += amountRead;
+                    System.out.print(new String(buf, 0, amountRead));
+                }
+            } while(amountRead > 0);
+
+            Assert.assertEquals(totalRead, mpw.getContentLength());
+
+        } catch (Exception e) {
+            System.out.println("aarg "+e);
+        }
+    }
+
 }

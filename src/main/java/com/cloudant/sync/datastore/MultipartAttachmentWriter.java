@@ -105,14 +105,22 @@ public class MultipartAttachmentWriter extends InputStream {
     private long contentLength;
 
     public int read() throws java.io.IOException {
+
         byte[] buf = new byte[1];
         int amountRead = read(buf);
+
         // will be 0 or EOF
         if (amountRead != 1) {
-            return amountRead;
+            return -1;
         }
         // return the character we read
-        return buf[0];
+        // convert from 2s complement
+        int c = buf[0];
+        if (c < 0) {
+            return c + 256;
+        } else {
+            return c;
+        }
     }
 
     @Override

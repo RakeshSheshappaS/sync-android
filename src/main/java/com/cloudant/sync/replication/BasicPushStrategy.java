@@ -250,15 +250,11 @@ class BasicPushStrategy implements ReplicationStrategy {
             Map<String, Set<String>> docOpenRevs = this.openRevisions(allTrees);
             Map<String, Set<String>> docMissingRevs = this.targetDb.revsDiff(docOpenRevs);
 
-
-            // TODO we want this to drop out the docs which have large attachments,
-            // and then send them separately as multipart
             ItemsToPush itemsToPush = missingRevisionsToJsonDocs(allTrees, docMissingRevs);
             List<String> serialisedMissingRevs = itemsToPush.serializedDocs;
             List<MultipartAttachmentWriter> multiparts = itemsToPush.multiparts;
 
             if (!this.cancel) {
-                // TODO sent the attachments
                 this.targetDb.putMultiparts(multiparts);
                 this.targetDb.bulkSerializedDocs(serialisedMissingRevs);
                 changesProcessed += docMissingRevs.size();

@@ -48,7 +48,17 @@ public class SavedAttachment extends Attachment {
     }
 
     public boolean isLarge() {
-        return true;
+        return this.getSize() > 65536;
+    }
+
+    public boolean shouldInline() {
+        // push_attachments_inline: false = always push multipart; small = push small attachments inline; true = always push inline
+        String pushPreference = System.getProperty("push_attachments_inline", "small");
+        if (pushPreference.equals("false") || (pushPreference.equals("small") && this.isLarge())) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public long getSize() {

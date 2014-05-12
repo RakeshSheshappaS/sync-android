@@ -157,7 +157,7 @@ public class RevisionHistoryHelper {
                 if (savedAtt.revpos < revpos) {
                     ; // skip
                 } else {
-                    if (savedAtt.isLarge()) {
+                    if (!savedAtt.shouldInline()) {
                         // add
                         if (mpw == null) {
                             // 1st time init
@@ -170,7 +170,7 @@ public class RevisionHistoryHelper {
                     }
                 }
             } catch (IOException ioe) {
-                ; // TODO
+                Log.w(LOG_TAG, "IOException caught when adding multiparts: "+ioe);
             }
         }
         if (mpw != null) {
@@ -195,7 +195,7 @@ public class RevisionHistoryHelper {
                     // if the revpos of the current doc is higher than that of the attachment, it's a stub
                     theAtt.put("stub", true);
                 } else {
-                    if (savedAtt.isLarge()) {
+                    if (!savedAtt.shouldInline()) {
                         theAtt.put("follows", true);
                     } else {
                         theAtt.put("follows", false);
