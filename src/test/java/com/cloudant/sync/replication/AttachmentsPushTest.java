@@ -28,12 +28,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -45,6 +49,7 @@ import static org.hamcrest.core.Is.isA;
  */
 
 @Category(RequireRunningCouchDB.class)
+@RunWith(Parameterized.class)
 public class AttachmentsPushTest extends ReplicationTestBase {
 
     String id1;
@@ -53,8 +58,20 @@ public class AttachmentsPushTest extends ReplicationTestBase {
 
     private TypedDatastore<Foo> fooTypedDatastore;
 
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {false}, {true}
+        });
+    }
+
+    @Parameterized.Parameter
+    public boolean pullAttachmentsInline;
+
     @Before
     public void setUp() throws Exception {
+
+        System.setProperty("pull_attachments_inline", String.valueOf(pullAttachmentsInline));
         super.setUp();
 
         this.fooTypedDatastore = new TypedDatastore<Foo>(

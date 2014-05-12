@@ -20,23 +20,27 @@ import com.cloudant.sync.datastore.Attachment;
 import com.cloudant.sync.datastore.DocumentRevision;
 import com.cloudant.sync.util.TestUtils;
 
-import org.apache.commons.codec.binary.Base64;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * Created by tomblench on 26/03/2014.
  */
 
 @Category(RequireRunningCouchDB.class)
+@RunWith(Parameterized.class)
 public class AttachmentsPullTest extends ReplicationTestBase {
 
     String id;
@@ -49,8 +53,19 @@ public class AttachmentsPullTest extends ReplicationTestBase {
     String bigAttachmentName = "bonsai-boston.jpg";
     String bigTextAttachmentName = "lorem_long.txt";
 
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {false}, {true}
+        });
+    }
+
+    @Parameterized.Parameter
+    public boolean pullAttachmentsInline;
+
     @Before
     public void setUp() throws Exception {
+        System.setProperty("pull_attachments_inline", String.valueOf(pullAttachmentsInline));
         super.setUp();
     }
 
