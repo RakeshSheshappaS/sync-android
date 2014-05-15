@@ -79,8 +79,6 @@ public class MultipartAttachmentWriterTests {
             }
             mpw.close();
 
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
             int amountRead = 0;
             int totalRead = 0;
 
@@ -113,8 +111,6 @@ public class MultipartAttachmentWriterTests {
             Attachment att0 = new UnsavedFileAttachment(new File("fixture", "bonsai-boston.jpg"), "image/jpeg");
             mpw.addAttachment(att0);
             mpw.close();
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             int amountRead = 0;
             int totalRead = 0;
