@@ -162,6 +162,9 @@ project(':core') {
                 srcDirs = ['../src/main/java']
                 exclude 'com/cloudant/sync/sqlite/android/**'
             }
+            resources {
+                srcDirs = ['../src/main/resources']
+            }
         }
         test {
             java {
