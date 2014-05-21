@@ -235,11 +235,21 @@ public class HttpRequests {
         if(userAgent == null) {
             String ua = this.getUserAgentFromResource();
             if(Misc.isRunningOnAndroid()) {
-                userAgent = ua + " " + Misc.androidVersion();
+                try {
+                    Class c = Class.forName("android.os.Build.VERSION");
+                    String codename = (String)c.getField("CODENAME").get(null);
+                    int sdkInt = c.getField("SDK_INT").getInt(null);
+                    userAgent =  String.format("%s Android %s %d", ua, codename, sdkInt);
+                } catch (Exception e) {
+                    userAgent = "?";
+                }
+            } else {
+                userAgent = String.format("%s (%s; %s; %s)",
+                        ua,
+                        System.getProperty("os.arch"),
+                        System.getProperty("os.name"),
+                        System.getProperty("os.version"));
             }
-            userAgent = ua + " (" + System.getProperty("os.arch") + "; "
-                    + System.getProperty("os.name") + "; "
-                    + System.getProperty("os.version") + ")";
         }
         return userAgent;
     }

@@ -14,8 +14,6 @@
 
 package com.cloudant.sync.util;
 
-import android.os.Build;
-
 import com.cloudant.common.Log;
 
 import java.io.File;
@@ -38,10 +36,6 @@ public class Misc {
     public static boolean isRunningOnAndroid() {
         String javaRuntime = System.getProperty("java.runtime.name", "");
         return javaRuntime.toLowerCase().contains(ANDROID_RUNTIME);
-    }
-
-    public static String androidVersion() {
-        return String.format("Android %s %s", Build.VERSION.CODENAME, Build.VERSION.SDK_INT);
     }
 
     public static byte[] getSha1(InputStream shaFis) {

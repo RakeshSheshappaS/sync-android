@@ -17,14 +17,12 @@
 
 package com.cloudant.sync.sqlite;
 
-import com.cloudant.sync.sqlite.android.AndroidSQLite;
-import com.cloudant.sync.sqlite.sqlite4java.SQLiteWrapper;
 import com.cloudant.sync.util.Misc;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.sql.SQLException;
 
 /**
@@ -43,9 +41,21 @@ public class SQLDatabaseFactory {
     public static SQLDatabase openSqlDatabase(String dbFilename) throws IOException {
         makeSureFileExists(dbFilename);
         if(Misc.isRunningOnAndroid()) {
-            return AndroidSQLite.createAndroidSQLite(dbFilename);
+            try {
+                Class c = Class.forName("com.cloudant.sync.sqlite.android.AndroidSQLite");
+                Method m = c.getMethod("createAndroidSQLite", String.class);
+                return (SQLDatabase)m.invoke(null, dbFilename);
+            } catch (Exception e) {
+                return null;
+            }
         } else {
-            return SQLiteWrapper.openSQLiteWrapper(dbFilename);
+            try {
+                Class c = Class.forName("com.cloudant.sync.sqlite.sqlite4java.SQLiteWrapper");
+                Method m = c.getMethod("openSQLiteWrapper", String.class);
+                return (SQLDatabase)m.invoke(null, dbFilename);
+            } catch (Exception e) {
+                return null;
+            }
         }
     }
 
